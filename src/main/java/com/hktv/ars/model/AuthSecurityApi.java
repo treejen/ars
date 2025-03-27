@@ -1,0 +1,32 @@
+package com.hktv.ars.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.Set;
+
+@Getter
+@Setter
+@Builder
+@Entity
+@Table(name = "auth_security_api")
+@AllArgsConstructor
+@NoArgsConstructor
+public class AuthSecurityApi extends BaseModel {
+    private String url;
+
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "authSecurityApi",
+            cascade = {CascadeType.PERSIST}
+    )
+    private Set<AuthSecurityApiRole> authSecurityApiRoles;
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="org.apache.http" level="INFO"/>
+    <logger name="httpclient.wire.header" level="INFO"/>
+    <logger name="httpclient.wire.content" level="INFO"/>
+
+    <appender name="ALERT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[developer-alert] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.hktv.ars.config.MaskingPatternLayout">
+
+                <!-- sensitive data log pattern -->
+                <!-- <maskPattern>\"username\"\s*:\s*\"(.*?)\"|username\s*:\s*(.*)</maskPattern> -->
+                <!-- <maskPattern>\"password\"\s*:\s*\"(.*?)\"|password\s*:\s*(.*)</maskPattern> -->
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-},%X{spanId:-}] %msg%n</pattern>
+            </layout>
+        </encoder>
+    </appender>
+
+    <logger name="com.zaxxer.hikari.pool.PoolBase" additivity="false" level="ERROR">
+        <appender-ref ref="ALERT" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
