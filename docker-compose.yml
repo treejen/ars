@@ -1,0 +1,40 @@
+services:
+  mysql:
+    build:
+      context: ./
+      dockerfile: manifests/deploy/local/setdb/Dockerfile
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - 3366:3306
+    networks:
+      hktv_ars_backend:
+        ipv4_address: 172.19.0.2
+    container_name: hktv_ars_backend_mysql
+    environment:
+      - TZ=Asia/Hong_Kong
+#  app:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile
+#    container_name: hktv_ars_backend
+#    environment:
+#      JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#    networks:
+#      hktv_ars_backend:
+#        ipv4_address: 172.19.0.4
+#    depends_on:
+#      - mysql
+#    ports:
+#      - "8091:8091"
+#      - "5005:5005"
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+
+networks:
+  hktv_ars_backend:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/24

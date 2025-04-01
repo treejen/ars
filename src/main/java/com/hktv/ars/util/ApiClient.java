@@ -20,10 +20,7 @@ public class ApiClient {
         return response.block();
     }
 
-    public static void postUrl(String url) {
-
-        // 構建 JSON body
-        String jsonBody = "{\"title\": \"Hello API\", \"body\": \"This is a test\", \"userId\": 1}";
+    public static void postUrl(String url, String jsonBody) {
 
         // 發送 POST 請求
         Mono<String> response = webClient.post()

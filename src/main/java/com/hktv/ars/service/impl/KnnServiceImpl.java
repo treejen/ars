@@ -23,13 +23,13 @@ import java.util.List;
 @Slf4j
 public class KnnServiceImpl implements KnnService {
 
-    @Value("${classifier.model-path:knn_classifier.ser}")
+    @Value("${ars.classifier.model-path:knn_classifier.ser}")
     private String modelFilePath;
 
-    @Value("${classifier.need-train:true}")
+    @Value("${ars.classifier.need-train:true}")
     private boolean isNeedTrain;
 
-    @Value("${classifier.k:10}")
+    @Value("${ars.classifier.k:10}")
     private int k;
 
     private KNNClassifier classifier;
@@ -38,8 +38,8 @@ public class KnnServiceImpl implements KnnService {
     private final StreetDao streetDao;
     private final StreetNumberDao streetNumberDao;
 
-    @PostConstruct
-    public void init() {
+
+    public void initModel() {
         if (isNeedTrain) {
             createAndTrainNewModel();
         } else {

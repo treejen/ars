@@ -10,12 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class CustomJobListener extends JobListenerSupport {
 
-    private final CronJobLogDao cronJobLogDao;
-
     @Autowired
-    public CustomJobListener(CronJobLogDao cronJobLogDao) {
-        this.cronJobLogDao = cronJobLogDao;
-    }
+    private CronJobLogDao cronJobLogDao;
 
     @Override
     public String getName() {

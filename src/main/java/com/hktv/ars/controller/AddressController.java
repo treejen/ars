@@ -1,10 +1,9 @@
 package com.hktv.ars.controller;
 
-import com.hktv.ars.config.RabbitMQConfig;
 import com.hktv.ars.data.RegionResponseData;
+import com.hktv.ars.rabbitmq.client.MessageClient;
 import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.service.GoogleMapService;
-import com.hktv.ars.service.InitDataService;
 import com.hktv.ars.service.PythonService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.hktv.ars.rabbitmq.client.MessageClient;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -24,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,18 +31,12 @@ public class AddressController {
 
     private final AhocorasickService ahocorasickService;
     private final GoogleMapService googleMapService;
-    private final InitDataService initDataService;
     private final PythonService pythonService;
     private final MessageClient messageClient;
 
-    @GetMapping("/initData")
-    public void init() {
-        initDataService.initData();
-    }
-
     @GetMapping("/send/{message}")
     public String sendMessage(@PathVariable String message) {
-        messageClient.sendData(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, message);
+        messageClient.sendData("myExchange", "myRoutingKey", message);
         return "已發送消息: " + message;
     }
 
@@ -106,10 +99,10 @@ public class AddressController {
                 Map<String, String> map = new HashMap<>();
                 map.put("ac", ac.getDeliveryZoneCode());
                 map.put("gm", gm.getDeliveryZoneCode());
-                if (py != null) {
-                    map.put("py", py.getDeliveryZoneCode());
-                }
-
+                map.put("py", py.getDeliveryZoneCode());
+                Boolean isSame = Objects.equals(ac.getDeliveryZoneCode(), gm.getDeliveryZoneCode())
+                        && Objects.equals(gm.getDeliveryZoneCode(), py.getDeliveryZoneCode());
+                map.put("isTheSame", isSame.toString());
                 results.put(ac.getAddress(), map);
             }
 
@@ -124,6 +117,9 @@ public class AddressController {
                 map.put("ac", ac.getDeliveryZoneCode());
                 map.put("gm", gm.getDeliveryZoneCode());
                 map.put("py", py.getDeliveryZoneCode());
+                Boolean isSame = Objects.equals(ac.getDeliveryZoneCode(), gm.getDeliveryZoneCode())
+                        && Objects.equals(gm.getDeliveryZoneCode(), py.getDeliveryZoneCode());
+                map.put("isTheSame", isSame.toString());
                 results.put(ac.getAddress(), map);
             }
             return results;

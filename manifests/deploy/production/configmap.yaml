@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hktv-ars-backend-configmap
+  namespace: hktv-ars
+data:
+  mysql_url: "proxysql"
+  mysql_port: "6033"
+  sso_server_url: "https://sso.hktvmall.com/hktv-sso/oauth/token"
+  #job
+  send_to_mms: "0 5 10 1,15 * ?"
+  init_data: "true"

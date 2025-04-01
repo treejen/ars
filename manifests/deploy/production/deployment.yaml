@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hktv-ars-backend
+  name: hktv-ars-backend
+  namespace: hktv-ars
+spec:
+  selector:
+    matchLabels:
+      app: hktv-ars-backend
+  template:
+    metadata:
+      labels:
+        app: hktv-ars-backend
+    spec:
+      containers:
+        - image: <CI_REGISTRY>/<PROJECT_ID>/<CI_APPLICATION_REPOSITORY>:<TAGS>
+          imagePullPolicy: IfNotPresent
+          name: hktv-ars-backend
+          resources:
+            requests:
+              memory: '4Gi'
+              cpu: '100m'
+            limits:
+              memory: '4Gi'
+              cpu: '4'
+          lifecycle:
+            preStop:
+              exec:
+                command: ['sh', '-c', 'sleep 10']
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /hktv_ars/healthcheck
+              port: 8090
+              scheme: HTTP
+            initialDelaySeconds: 300
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 3
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /hktv_ars/healthcheck
+              port: 8090
+              scheme: HTTP
+            initialDelaySeconds: 300
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 3
+          env:
+            ###Configmap###
+            - name: JAVA_OPTS
+              value: -server -Xms512m -Xmx1024m -javaagent:/tmp/extra-directories/glowroot/glowroot.jar
+                -Dglowroot.collector.address=http://hktv-glowroot-svc.kube-logging.svc.cluster.local:8181
+            - name: MYSQL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: mysql_url
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: mysql_port
+            - name: SEND_TO_MMS
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: send_to_mms
+            - name: SSO_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: sso_server_url
+            - name: INIT_DATA
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: init_data
+            ###Secret###
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: mysql_database
+            - name: MYSQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: mysql_username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: mysql_password
+            - name: ARS_CMS_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: ars_cms_public_key
+            - name: ARS_CMS_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: ars_cms_private_key
+            - name: SSO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hktv-ars-backend-eclipse
+                  key: sso_secret_key
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - hktv-wis-backend
+                topologyKey: 'kubernetes.io/hostname'

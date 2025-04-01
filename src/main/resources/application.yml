@@ -1,0 +1,116 @@
+server:
+  servlet:
+    context-path: /hktv_ars
+  port: 8080
+
+spring:
+  application:
+    name: hktv_ars
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_URL}:${MYSQL_PORT}/${MYSQL_DATABASE}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connectionTimeout: 30000
+      minimum-idle: 50
+      maximum-pool-size: 50
+      idleTimeout: 600000
+      max-lifetime: 1800000
+      auto-commit: true
+      pool-name: hktv-ars-cp
+  main:
+    allow-circular-references: true
+  sleuth:
+    enabled: true
+    sampler:
+      probability: 1.0
+
+  jpa:
+    database: mysql
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    overwrite-existing-jobs: true
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: ArsClusteredScheduler
+            instanceId: AUTO
+          jobStore:
+            isClustered: true
+            acquireTriggersWithinLock: true
+            maxMisfiresToHandleAtATime: 1
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    listener:
+      type: simple
+      simple:
+        default-requeue-rejected: false
+        concurrency: 5
+        max-concurrency: 50
+    mode: ${RABBITMQ_MODE}
+
+ars:
+  job:
+    schedule:
+      sendToMms: ${SEND_TO_MMS}
+  async:
+    executor:
+      thread:
+        core_pool_size: 20
+        max_pool_size: 100
+        keep_alive_time: 10
+        queue_capacity: 200
+        name:
+          prefix: async-service-
+  cms-auth:
+    publicKey: ${ARS_CMS_PUBLIC_KEY}
+    privateKey: ${ARS_CMS_PRIVATE_KEY}
+  jwt:
+    expirationInMs: 1800000
+  sso:
+    ssoSecretKey: ${SSO_SECRET_KEY}
+    oauthUrl: ${SSO_SERVER_URL}
+  classifier:
+    k: 2
+    model-path: knn_classifier.ser
+    need-train: true
+  init-data: ${INIT_DATA}
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    brave:
+      trace-id-128: false
+
+general:
+  read:
+    timeout:
+      seconds: 35
+  connect:
+    timeout:
+      seconds: 30
+

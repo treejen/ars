@@ -1,6 +1,7 @@
 package com.hktv.ars.model;
 
 import com.hktv.ars.data.ExcelMappingData;
+import com.hktv.ars.util.CleanWordUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,7 @@ public class StreetNumber extends BaseModel {
                     .willDelivery("Y".equals(data.getWillDelivery()) ? Boolean.TRUE : Boolean.FALSE)
                     .latitude(new BigDecimal(data.getLatitude().trim()).setScale(6, RoundingMode.DOWN))
                     .longitude(new BigDecimal(data.getLongitude().trim()).setScale(6, RoundingMode.DOWN))
-                    .streetNumber(data.getStreetNumber().split("\\s*\\(")[0].trim())
+                    .streetNumber(CleanWordUtil.truncateString(CleanWordUtil.removeBrackets(data.getStreetNumber()), 10))
                     .build();
         } catch (Exception e) {
             System.out.println(e);

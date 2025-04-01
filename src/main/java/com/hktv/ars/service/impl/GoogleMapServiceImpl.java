@@ -9,8 +9,10 @@ import com.google.maps.model.GeocodingResult;
 import com.hktv.ars.data.RegionResponseData;
 import com.hktv.ars.service.GoogleMapService;
 import com.hktv.ars.service.KnnService;
+import com.hktv.ars.util.ApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -49,7 +51,10 @@ public class GoogleMapServiceImpl implements GoogleMapService {
                 estate = getComponentValue(components, AddressComponentType.PREMISE.toString()).orElse(null); //中環中心
                 district = getComponentValue(components, AddressComponentType.NEIGHBORHOOD.toString()).orElse(null); //中環
 
-                deliveryZoneCode = knnService.predict(latitude, longitude);
+//                deliveryZoneCode = knnService.predict(latitude, longitude);
+                JSONObject obj = new JSONObject(ApiClient.getUrl("http://192.168.11.39:8079/classifier?latitude="+latitude+"&longitude="+longitude));
+                log.info(obj.toString());
+                deliveryZoneCode = obj.getString("predictedClass");
             }
         } catch (IOException | ApiException | InterruptedException ex) {
             log.error(ex.getMessage());

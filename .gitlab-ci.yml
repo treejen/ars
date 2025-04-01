@@ -1,0 +1,143 @@
+include:
+  - project: "hktv/hktv-ci-cd-templates"
+    ref: main
+    file: "public/templates/k8s/argocd.yml"
+  - project: "hktv/hktv-ci-cd-templates"
+    ref: main
+    file: "public/templates/k8s/build_docker_image.yml"
+
+image: public.ecr.aws/docker/library/docker:latest
+cache:
+  paths:
+    - .m2/repository
+
+# testcontainer reference : https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
+services:
+  - name: docker:dind
+    command: ["--tls=false"]
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  #  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+  CURRENT_NAMESPACE: hktv-ars
+
+stages:
+  - compile check
+  - sonarqube scan
+  - build docker image
+  - create merge request dev
+  - create merge request staging
+  - create merge request production
+
+compile check:
+  stage: compile check
+  tags:
+    - COMPILE
+  image: public.ecr.aws/docker/library/maven:3.9.8-amazoncorretto-21
+  artifacts:
+    paths:
+      - target/*.jar
+  script:
+    - mvn clean package
+  except:
+    - schedules
+    - tags
+    - /^dev$/
+    - /^staging.*$/
+    - /^release.*$/
+  interruptible: true
+
+sonarqube scan:
+  stage: sonarqube scan
+  tags:
+    - COMPILE
+  image: public.ecr.aws/docker/library/maven:3.9.8-amazoncorretto-21
+  script:
+    - mvn verify sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL_DEV} -Dsonar.projectKey=${CI_APPLICATION_REPOSITORY} -Dsonar.login=${SONAR_TOKEN}
+  allow_failure: true
+  only:
+    - dev
+
+build docker image:
+  extends: .build_docker_image_simple
+  stage: build docker image
+  only:
+    - /^dev*/
+    - /^staging$/
+    - /^release.*$/
+  interruptible: true
+
+#build docker image:
+#  stage: build docker image
+#  tags:
+#    - DOCKERBUILD
+#  script:
+#    - build
+#  except:
+#    - schedules
+#    - tags
+#  interruptible: true
+#  only:
+#    - /^dev$/
+#    - /^staging$/
+#    - /^release.*$/
+
+create merge request dev:
+  extends: .create_merge_request_for_argocd_dev
+  stage: create merge request dev
+  variables:
+    CD_TARGET_FOLDER: hktv-ars/hktv-ars-backend
+    CD_SRC_K8S_FILE_FOLDER: manifests/deploy/dev
+  script:
+    - |
+      apk add rsync
+      rsync -av /builds/$CI_PROJECT_PATH/$CD_SRC_K8S_FILE_FOLDER/ $CD_TARGET_FOLDER/
+      NEW_IMAGE_NAME="$(echo $CI_REGISTRY_IMAGE)"
+      NEW_IMAGE_TAG="$CI_COMMIT_SHA"
+      yq eval-all -i "select(.metadata.namespace == \"$CURRENT_NAMESPACE\") | (.spec.template.spec.containers[] | select(.name == \"hktv-ars-backend\") | .image) = \"$NEW_IMAGE_NAME:$NEW_IMAGE_TAG\"" $CD_TARGET_FOLDER/deployment.yaml
+  only:
+    - /^dev$/
+  interruptible: true
+
+create merge request staging:
+  extends: .create_merge_request_for_argocd_stag
+  stage: create merge request staging
+  variables:
+    CD_TARGET_FOLDER: hktv-ars/hktv-ars-backend
+    CD_SRC_K8S_FILE_FOLDER: manifests/deploy/staging
+  script:
+    - |
+      apk add rsync
+      rsync -av /builds/$CI_PROJECT_PATH/$CD_SRC_K8S_FILE_FOLDER/ $CD_TARGET_FOLDER/
+      NEW_IMAGE_NAME="$(echo $CI_REGISTRY_IMAGE)"
+      NEW_IMAGE_TAG="$CI_COMMIT_SHA"
+      yq eval-all -i "select(.metadata.namespace == \"$CURRENT_NAMESPACE\") | (.spec.template.spec.containers[] | select(.name == \"hktv-ars-backend\") | .image) = \"$NEW_IMAGE_NAME:$NEW_IMAGE_TAG\"" $CD_TARGET_FOLDER/deployment.yaml
+  only:
+    - /^staging$/
+  interruptible: true
+
+create merge request production:
+  extends: .create_merge_request_for_argocd_prod
+  stage: create merge request production
+  variables:
+    CD_TARGET_FOLDER: hktv-ars/hktv-ars-backend
+    CD_SRC_K8S_FILE_FOLDER: manifests/deploy/production
+  script:
+    - |
+      apk add rsync
+      rsync -av --exclude='secret.yaml' /builds/$CI_PROJECT_PATH/$CD_SRC_K8S_FILE_FOLDER/ $CD_TARGET_FOLDER/
+      NEW_IMAGE_NAME="$(echo $CI_REGISTRY_IMAGE)"
+      NEW_IMAGE_TAG="release-$(echo $CI_COMMIT_REF_NAME | cut -d'/' -f2)"
+      yq eval-all -i "select(.metadata.namespace == \"$CURRENT_NAMESPACE\") | (.spec.template.spec.containers[] | select(.name == \"hktv-ars-backend\") | .image) = \"$NEW_IMAGE_NAME:$NEW_IMAGE_TAG\"" $CD_TARGET_FOLDER/deployment.yaml
+  only:
+    - /^release*/
+  interruptible: true
+
+.auto_devops: &auto_devops |
+  # Auto DevOps variables and functions
+  [[ "$TRACE" ]] && set -x
+
+before_script:
+  - *auto_devops

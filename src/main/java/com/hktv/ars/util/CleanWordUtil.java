@@ -9,7 +9,7 @@ public class CleanWordUtil {
      * 清理地址：自動判斷是中文或英文，並移除括號內容及特殊符號
      */
     public static String cleanAddress(String text) {
-        String address = text.replaceAll("\\s*\\(.*?\\)", "");  // 移除括號及其內容
+        String address = removeBrackets(text);
         return removeSpecialChars(address, containsChinese(address));
     }
 
@@ -49,5 +49,16 @@ public class CleanWordUtil {
                     .replaceAll("[^a-zA-Z0-9 .,-]", "")
                     .toLowerCase();
         }
+    }
+
+    public static String removeBrackets(String value) {
+        if (value == null || !value.contains("(")) {
+            return value;
+        }
+        return value.replaceAll("\\s*\\(.*?\\)", "");
+    }
+
+    public static String truncateString(String value, int maxLength) {
+        return (value != null && value.length() > maxLength) ? value.substring(0, maxLength) : value;
     }
 }

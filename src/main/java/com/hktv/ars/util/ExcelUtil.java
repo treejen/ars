@@ -178,7 +178,7 @@ public class ExcelUtil {
         if (fieldType == String.class) {
             boolean hasExponential = result.contains("E");
             if (hasExponential) {
-                BigDecimal number = BigDecimal.valueOf(cell.getNumericCellValue());
+                BigDecimal number = BigDecimal.valueOf(cell.getNumericCellValue()).setScale(6, RoundingMode.HALF_UP);
                 return number.toPlainString();
             }
 
@@ -194,7 +194,7 @@ public class ExcelUtil {
         } else if (fieldType == double.class || fieldType == Double.class) {
             return numericValue;
         } else if (fieldType == BigDecimal.class) {
-            return BigDecimal.valueOf(numericValue).setScale(2, RoundingMode.HALF_UP);
+            return BigDecimal.valueOf(numericValue).setScale(6, RoundingMode.HALF_UP);
         } else if (fieldType == Boolean.class || fieldType == boolean.class) {
             return numericValue != 0;
         } else if (fieldType == LocalDateTime.class) {

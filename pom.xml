@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.hktv</groupId>
-	<artifactId>ars</artifactId>
+	<artifactId>hktv-ars-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ars</name>
 	<description>Address Resolver Service</description>

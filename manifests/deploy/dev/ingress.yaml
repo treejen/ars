@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hktv-wis-backend-ingress
+  namespace: hktv-ars
+spec:
+  rules:
+    - host: ars-dev.hkmpcl.com.hk
+      http:
+        paths:
+          - path: /hktv_ars
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hktv-ars-backend-svc
+                port:
+                  number: 80
