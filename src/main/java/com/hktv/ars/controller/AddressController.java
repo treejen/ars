@@ -5,6 +5,7 @@ import com.hktv.ars.rabbitmq.client.MessageClient;
 import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.service.GoogleMapService;
 import com.hktv.ars.service.PythonService;
+import com.hktv.ars.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +34,13 @@ public class AddressController {
     private final GoogleMapService googleMapService;
     private final PythonService pythonService;
     private final MessageClient messageClient;
+    private final RedisService redisService ;
+
+    @GetMapping("/test-redis")
+    public String testRedis() {
+        redisService.saveToRedis("hello", "world");
+        return redisService.getFromRedis("hello");
+    }
 
     @GetMapping("/send/{message}")
     public String sendMessage(@PathVariable String message) {

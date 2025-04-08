@@ -1,5 +1,6 @@
 package com.hktv.ars.model;
 
+import com.hktv.ars.data.AddressData;
 import com.hktv.ars.data.ExcelMappingData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -48,5 +49,16 @@ public class Estate extends BaseModel {
             System.out.println(data);
         }
         return null;
+    }
+
+    public static AddressData convertToAddressData(Estate data) {
+        return AddressData.builder()
+                .code(data.getEstateCode())
+                .deliveryZoneCode(data.getDeliveryZoneCode())
+                .enName(data.getEstateNameEn())
+                .zhName(data.getEstateNameZh())
+                .latitude(data.getLatitude())
+                .longitude(data.getLongitude())
+                .build();
     }
 }

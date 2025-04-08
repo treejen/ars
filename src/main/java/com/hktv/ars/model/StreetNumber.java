@@ -1,5 +1,6 @@
 package com.hktv.ars.model;
 
+import com.hktv.ars.data.AddressData;
 import com.hktv.ars.data.ExcelMappingData;
 import com.hktv.ars.util.CleanWordUtil;
 import jakarta.persistence.Entity;
@@ -43,5 +44,16 @@ public class StreetNumber extends BaseModel {
             System.out.println(data);
         }
         return null;
+    }
+
+    public static AddressData convertToAddressData(StreetNumber data) {
+        return AddressData.builder()
+                .code(data.getStreetCode())
+                .deliveryZoneCode(data.getDeliveryZoneCode())
+                .enName(data.getStreetNumber())
+                .zhName(data.getStreetNumber())
+                .latitude(data.getLatitude())
+                .longitude(data.getLongitude())
+                .build();
     }
 }

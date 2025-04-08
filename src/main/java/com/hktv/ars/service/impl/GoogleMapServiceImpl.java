@@ -76,14 +76,14 @@ public class GoogleMapServiceImpl implements GoogleMapService {
     private static Optional<String> getComponentValue(AddressComponent[] components, String type) {
         return Arrays.stream(components)
                 .filter(c -> Arrays.stream(c.types)
-                        .anyMatch(t -> t.toString().equals(type)))
+                        .map(Enum::name)
+                        .anyMatch(t -> t.equalsIgnoreCase(type)))
                 .map(c -> c.longName)
                 .findFirst();
     }
 
     private static String normalizeStreetNumber(String streetNumber) {
-        if (streetNumber == null) return null;
-        return streetNumber.replaceAll("[^0-9]", ""); // 只保留數字
+        return streetNumber == null? null : streetNumber.replaceAll("[^0-9]", ""); // 只保留數字
     }
 
 }

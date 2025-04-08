@@ -52,6 +52,16 @@ spring:
             isClustered: true
             acquireTriggersWithinLock: true
             maxMisfiresToHandleAtATime: 1
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
+    jedis:
+      pool:
+        max-active: 10
+        max-idle: 5
+        min-idle: 1
+        max-wait: 2000
 
   servlet:
     multipart:

@@ -1,24 +1,22 @@
 package com.hktv.ars.service.impl;
 
+import com.hktv.ars.data.AddressData;
 import com.hktv.ars.data.RegionResponseData;
+import com.hktv.ars.enums.AddressType;
 import com.hktv.ars.model.Estate;
 import com.hktv.ars.model.Street;
 import com.hktv.ars.model.StreetNumber;
-import com.hktv.ars.repository.DistrictDao;
 import com.hktv.ars.repository.EstateDao;
 import com.hktv.ars.repository.StreetDao;
 import com.hktv.ars.repository.StreetNumberDao;
 import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.util.CleanWordUtil;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,6 +28,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Log
 @Service
 @RequiredArgsConstructor
 public class AhocorasickServiceImpl implements AhocorasickService {
@@ -52,58 +51,40 @@ public class AhocorasickServiceImpl implements AhocorasickService {
     private static final Set<String> EXCLUDE_WORDS = Set.of("apt", "room", "unit", "floor", "building", "f");
 
     private static Trie TRIE;
-    private static final Logger log = LoggerFactory.getLogger(AhocorasickServiceImpl.class);
-
-    private final DistrictDao districtDao;
     private final EstateDao estateDao;
     private final StreetDao streetDao;
     private final StreetNumberDao streetNumberDao;
 
-    @PostConstruct
-    private void buildTrieFromDB() {
-        long time = System.currentTimeMillis();
-        Runtime runtime = Runtime.getRuntime();
-        long beforeMemory = runtime.totalMemory() - runtime.freeMemory();
+    public List<String> initMapByAddressType(AddressType addressType, List<AddressData> addressDataList) {
         List<String> keywords = new ArrayList<>();
-        districtDao.findAll()
-                .forEach(district -> {
-                            String cleanedDistrictEn = CleanWordUtil.cleanAddress(district.getDistrictNameEn()).replace("hk", "");
-                            String cleanedDistrictZh = CleanWordUtil.cleanAddress(district.getDistrictNameZh());
-                            DISTRICT_AND_CODE.put(cleanedDistrictEn, district.getDistrictCode());
-                            DISTRICT_AND_CODE.put(cleanedDistrictZh, district.getDistrictCode());
-                            keywords.add(cleanedDistrictEn);
-                            keywords.add(cleanedDistrictZh);
-                        }
-                );
-
-        streetDao.findAll().forEach(street -> {
-                    String cleanedStreetEn = CleanWordUtil.cleanAddress(street.getStreetNameEn());
-                    String cleanedStreetZh = CleanWordUtil.cleanAddress(street.getStreetNameZh());
-                    STREET_AND_DBNAME.put(cleanedStreetEn, street.getStreetNameEn());
-                    STREET_AND_DBNAME.put(cleanedStreetZh, street.getStreetNameZh());
-                    keywords.add(cleanedStreetEn);
-                    keywords.add(cleanedStreetZh);
+        addressDataList.forEach(
+                data -> {
+                    String cleanedEn = CleanWordUtil.cleanAddress(data.getEnName());
+                    String cleanedZh = CleanWordUtil.cleanAddress(data.getZhName());
+                    keywords.add(cleanedEn);
+                    keywords.add(cleanedZh);
+                    if (addressType == AddressType.DISTRICT) {
+                        DISTRICT_AND_CODE.put(cleanedEn, data.getCode());
+                        DISTRICT_AND_CODE.put(cleanedZh, data.getCode());
+                    } else if (addressType == AddressType.ESTATE) {
+                        ESTATE_AND_DBNAME.put(cleanedEn, data.getEnName());
+                        ESTATE_AND_DBNAME.put(cleanedZh, data.getZhName());
+                    } else if (addressType == AddressType.STREET) {
+                        STREET_AND_DBNAME.put(cleanedEn, data.getEnName());
+                        STREET_AND_DBNAME.put(cleanedZh, data.getZhName());
+                    }
                 }
         );
 
-        estateDao.findAll().forEach(estate -> {
-                    String cleanedEstateEn = CleanWordUtil.cleanAddress(estate.getEstateNameEn());
-                    String cleanedEstateZh = CleanWordUtil.cleanAddress(estate.getEstateNameZh());
-                    ESTATE_AND_DBNAME.put(cleanedEstateEn, estate.getEstateNameEn());
-                    ESTATE_AND_DBNAME.put(cleanedEstateZh, estate.getEstateNameZh());
-                    keywords.add(cleanedEstateEn);
-                    keywords.add(cleanedEstateZh);
-                }
-        );
+        return keywords;
+    }
 
+    public void initModel(List<String> keywords) {
         TRIE = Trie.builder()
                 .addKeywords(keywords)
                 .addKeywords(List.of(CHINESE_NO))
                 .build();
-
-        long afterMemory = runtime.totalMemory() - runtime.freeMemory();
-        System.out.println("=====Ahocorasick資料存入[ " + keywords.size() + " ]筆, 耗時[ " + (System.currentTimeMillis() - time) + " ]毫秒=====");
-        System.out.println("=====Ahocorasick佔用了[ " + (afterMemory - beforeMemory) / 1024 / 1024 + " ]MB=====");
+        log.info("Ahocorasick資料存入[ " + keywords.size()+1 + " ]筆");
     }
 
     public RegionResponseData extractAddresses(String text) {
@@ -214,11 +195,11 @@ public class AhocorasickServiceImpl implements AhocorasickService {
             String dbName = ESTATE_AND_DBNAME.get(estate);
             Optional<Estate> estateOptional = estateDao.findByEstateName(dbName);
             if (estateOptional.isPresent() && (estateOptional.get().getDistrictCode().equals(DISTRICT_AND_CODE.get(district))
-                        || address.equals(estate))) {
-                    regionResponseData.setLatitude(estateOptional.get().getLatitude());
-                    regionResponseData.setLongitude(estateOptional.get().getLongitude());
-                    regionResponseData.setDeliveryZoneCode(estateOptional.get().getDeliveryZoneCode());
-                }
+                    || address.equals(estate))) {
+                regionResponseData.setLatitude(estateOptional.get().getLatitude());
+                regionResponseData.setLongitude(estateOptional.get().getLongitude());
+                regionResponseData.setDeliveryZoneCode(estateOptional.get().getDeliveryZoneCode());
+            }
 
         }
         return regionResponseData;

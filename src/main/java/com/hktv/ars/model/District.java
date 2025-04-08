@@ -1,5 +1,6 @@
 package com.hktv.ars.model;
 
+import com.hktv.ars.data.AddressData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -20,4 +21,13 @@ public class District extends BaseModel{
     private String deliveryZoneCode;
     private String districtNameEn;
     private String districtNameZh;
+
+    public static AddressData convertToAddressData(District data) {
+        return AddressData.builder()
+                .code(data.getDistrictCode())
+                .deliveryZoneCode(data.getDeliveryZoneCode())
+                .enName(data.getDistrictNameEn())
+                .zhName(data.getDistrictNameZh())
+                .build();
+    }
 }

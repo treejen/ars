@@ -1,16 +1,17 @@
 package com.hktv.ars.service.impl;
 
+import com.hktv.ars.data.AddressData;
 import com.hktv.ars.data.ExcelMappingData;
-import com.hktv.ars.model.DeliveryZone;
+import com.hktv.ars.enums.AddressType;
 import com.hktv.ars.model.District;
 import com.hktv.ars.model.Estate;
 import com.hktv.ars.model.Street;
 import com.hktv.ars.model.StreetNumber;
-import com.hktv.ars.repository.DeliveryZoneDao;
 import com.hktv.ars.repository.DistrictDao;
 import com.hktv.ars.repository.EstateDao;
 import com.hktv.ars.repository.StreetDao;
 import com.hktv.ars.repository.StreetNumberDao;
+import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.service.InitDataService;
 import com.hktv.ars.service.KnnService;
 import com.hktv.ars.util.ExcelUtil;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,43 +38,51 @@ public class InitDataServiceImpl implements InitDataService {
     @Value("${ars.init-data:true}")
     private boolean isNeedLoadExcel;
 
-    private final DeliveryZoneDao deliveryZoneDao;
     private final DistrictDao districtDao;
     private final EstateDao estateDao;
     private final StreetDao streetDao;
     private final StreetNumberDao streetNumberDao;
     private final KnnService knnService;
+    private final AhocorasickService ahocorasickService;
 
     @PostConstruct
     public void initData() {
-        if (isNeedLoadExcel) {
-            loadingExcelData();
+        if (!isNeedLoadExcel) {
+            return;
         }
-        knnService.initModel();
+        log.info("===== start init data =====");
+
+        long start = System.currentTimeMillis();
+        List<AddressData> allAddressDataList = new ArrayList<>();
+        List<String> allCleanNameList = new ArrayList<>();
+
+        for (AddressType addressType : AddressType.values()) {
+            List<AddressData> addressDataList = loadingExcelData(addressType);
+            if (addressType.isKeyWord()) {
+                allCleanNameList.addAll(
+                        ahocorasickService.initMapByAddressType(addressType, addressDataList));
+            }
+            if (addressType.isHasPoint()) {
+                allAddressDataList.addAll(addressDataList);
+            }
+        }
+
+        ahocorasickService.initModel(allCleanNameList);
+        knnService.initModel(allAddressDataList);
+
+        log.info("===== init data cost : " + (System.currentTimeMillis() - start)/1000 + " seconds =====");
     }
 
-    private void loadingExcelData() {
+    private List<AddressData> loadingExcelData(AddressType addressType) {
         String filePath = "C:\\Users\\tracy.chang\\Downloads\\Address-20250220103453.xlsx";
-        try {
-            //delivery zone code
-            deliveryZoneDao.deleteAll();
-            List<DeliveryZone> deliveryZoneList = ExcelUtil.readResource(filePath, getDeliveryHeaderToClassParamMap(), DeliveryZone.class, 2);
-            deliveryZoneDao.saveAll(deliveryZoneList);
-            log.info("save delivery zone size : " + deliveryZoneList.size());
-        } catch (Exception e) {
-            log.info(e.getLocalizedMessage());
-        }
-        try {
-            //district
+        if (addressType == AddressType.DISTRICT) {
             districtDao.deleteAll();
             List<District> districtList = ExcelUtil.readResource(filePath, getDistrictHeaderToClassParamMap(), District.class, 3);
             districtDao.saveAll(districtList);
             log.info("save district size : " + districtList.size());
-        } catch (Exception e) {
-            log.info(e.getLocalizedMessage());
-        }
-        try {
-            //estate
+            return districtList.stream().map(District::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.ESTATE) {
             estateDao.deleteAll();
             List<Estate> estateList = Objects.requireNonNull(ExcelUtil.readResource(filePath, getEstateHeaderToClassParamMap(), ExcelMappingData.class, 5))
                     .stream()
@@ -84,11 +94,9 @@ public class InitDataServiceImpl implements InitDataService {
                     .toList();
             estateDao.saveAll(estateList);
             log.info("save estate size : " + estateList.size());
-        } catch (Exception e) {
-            log.info(e.getLocalizedMessage());
-        }
-        try {
-            //street
+            return estateList.stream().map(Estate::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.STREET) {
             streetDao.deleteAll();
             List<Street> streetList = Objects.requireNonNull(ExcelUtil.readResource(filePath, getStreetHeaderToClassParamMap(), ExcelMappingData.class, 9))
                     .stream()
@@ -100,11 +108,9 @@ public class InitDataServiceImpl implements InitDataService {
                     .toList();
             streetDao.saveAll(streetList);
             log.info("save street size : " + streetList.size());
-        } catch (Exception e) {
-            log.info(e.getLocalizedMessage());
-        }
-        try {
-            //street number
+            return streetList.stream().map(Street::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.STREET_NUMBER) {
             streetNumberDao.deleteAll();
             List<StreetNumber> streetNumberList = Objects.requireNonNull(ExcelUtil.readResource(filePath, getStreetNumberHeaderToClassParamMap(), ExcelMappingData.class, 10))
                     .stream()
@@ -114,12 +120,11 @@ public class InitDataServiceImpl implements InitDataService {
                     .map(StreetNumber::covertExcelData)
                     .filter(Objects::nonNull)
                     .toList();
-
             streetNumberDao.saveAll(streetNumberList);
-            log.info("save streetNumber size : " + streetNumberList.size());
-        } catch (Exception e) {
-            log.info(e.getLocalizedMessage());
+            log.info("save street number size : " + streetNumberList.size());
+            return streetNumberList.stream().map(StreetNumber::convertToAddressData).toList();
         }
+        return new ArrayList<>();
     }
 
     private boolean isValidLatitudeLongitude(String latStr, String lonStr) {

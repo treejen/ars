@@ -1,12 +1,10 @@
 package com.hktv.ars.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.hktv.ars.data.RegionResponseData;
 import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.service.PythonService;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -53,7 +51,7 @@ public class PythonServiceImpl implements PythonService {
 
             // Capture errors
             BufferedReader errorReader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream(),"Big5"));
+                    new InputStreamReader(process.getErrorStream(), "Big5"));
             while ((line = errorReader.readLine()) != null) {
                 System.err.println("Python Error: " + line);
             }
@@ -63,7 +61,7 @@ public class PythonServiceImpl implements PythonService {
                 System.out.println("Exited with code: " + exitCode);
             }
 
-            if(output.isEmpty()){
+            if (output.isEmpty()) {
                 return regionResponseData;
             }
 
