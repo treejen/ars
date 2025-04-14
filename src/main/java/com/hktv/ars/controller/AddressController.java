@@ -34,7 +34,7 @@ public class AddressController {
     private final GoogleMapService googleMapService;
     private final PythonService pythonService;
     private final MessageClient messageClient;
-    private final RedisService redisService ;
+    private final RedisService redisService;
 
     @GetMapping("/test-redis")
     public String testRedis() {
@@ -82,15 +82,17 @@ public class AddressController {
         }
     }
 
+    @GetMapping("/find-hk-addresses")
+    public RegionResponseData findHkAddresses(@RequestParam String type, @RequestParam String address) {
+        return getResultByType(type, address);
+    }
+
     private RegionResponseData getResultByType(String type, String address) {
-        switch (type) {
-            case "gm":
-                return googleMapService.extractAddresses(address);
-            case "py":
-                return pythonService.extractAddresses(address);
-            default:
-                return ahocorasickService.extractAddresses(address);
-        }
+        return switch (type) {
+            case "gm" -> googleMapService.extractAddresses(address);
+            case "py" -> pythonService.extractAddresses(address);
+            default -> ahocorasickService.extractAddresses(address);
+        };
     }
 
     @GetMapping("/compare")
