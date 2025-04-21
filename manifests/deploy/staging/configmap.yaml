@@ -7,6 +7,7 @@ data:
   mysql_url: "hktv-wis-db-staging.nat.hkmpcl.com.hk"
   mysql_port: "3306"
   sso_server_url: "https://sso.hkmpcl.com.hk/hktv-sso/oauth/token"
+  excel_file_path: "/home/ars/excel"
   #job
   send_to_mms: "0 5 10 1,15 * ?"
   init_data: "true"

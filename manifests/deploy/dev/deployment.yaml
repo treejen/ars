@@ -74,6 +74,11 @@ spec:
                 configMapKeyRef:
                   name: hktv-ars-backend-configmap
                   key: sso_server_url
+            - name: EXCEL_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: hktv-ars-backend-configmap
+                  key: excel_file_path
             - name: INIT_DATA
               valueFrom:
                 configMapKeyRef:

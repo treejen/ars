@@ -50,11 +50,7 @@ public class GoogleMapServiceImpl implements GoogleMapService {
                 number = normalizeStreetNumber(getComponentValue(components, AddressComponentType.STREET_NUMBER.toString()).orElse(null)); //99
                 estate = getComponentValue(components, AddressComponentType.PREMISE.toString()).orElse(null); //中環中心
                 district = getComponentValue(components, AddressComponentType.NEIGHBORHOOD.toString()).orElse(null); //中環
-
-//                deliveryZoneCode = knnService.predict(latitude, longitude);
-                JSONObject obj = new JSONObject(ApiClient.getUrl("http://192.168.11.39:8079/classifier?latitude="+latitude+"&longitude="+longitude));
-                log.info(obj.toString());
-                deliveryZoneCode = obj.getString("predictedClass");
+                deliveryZoneCode = knnService.predict(latitude, longitude);
             }
         } catch (IOException | ApiException | InterruptedException ex) {
             log.error(ex.getMessage());

@@ -107,6 +107,7 @@ ars:
     model-path: knn_classifier.ser
     need-train: true
   init-data: ${INIT_DATA}
+  excel-file-path: ${EXCEL_FILE_PATH}
 
 management:
   tracing:

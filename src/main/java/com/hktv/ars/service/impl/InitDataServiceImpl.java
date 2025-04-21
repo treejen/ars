@@ -38,6 +38,10 @@ public class InitDataServiceImpl implements InitDataService {
     @Value("${ars.init-data:true}")
     private boolean isNeedLoadExcel;
 
+    @Value("${ars.excel-file-path}")
+    private String excelFilePath;
+
+
     private final DistrictDao districtDao;
     private final EstateDao estateDao;
     private final StreetDao streetDao;
@@ -74,7 +78,8 @@ public class InitDataServiceImpl implements InitDataService {
     }
 
     private List<AddressData> loadingExcelData(AddressType addressType) {
-        String filePath = "C:\\Users\\tracy.chang\\Downloads\\Address-20250220103453.xlsx";
+
+        String filePath = excelFilePath;
         if (addressType == AddressType.DISTRICT) {
             districtDao.deleteAll();
             List<District> districtList = ExcelUtil.readResource(filePath, getDistrictHeaderToClassParamMap(), District.class, 3);
