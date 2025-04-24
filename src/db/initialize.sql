@@ -11,6 +11,26 @@ CREATE SCHEMA IF NOT EXISTS `hktv_ars` DEFAULT CHARACTER SET utf8 ;
 USE `hktv_ars`;
 
 -- -----------------------------------------------------
+-- Table `hktv_ars`.`system_variable`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `system_variable` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(64) NOT NULL,
+  `value` VARCHAR(64) NOT NULL,
+  `description` VARCHAR(255) NULL,
+  `visible` TINYINT(1) DEFAULT TRUE,
+  `creation_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by`         BIGINT        NOT NULL,
+  `last_modified_date` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `last_modified_by`         BIGINT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `system_variable_name_idx_UNIQUE` (`name` ASC) VISIBLE)
+ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
 -- Table `hktv_ars`.`cron_job_log`
 -- -----------------------------------------------------
 CREATE TABLE `hktv_ars`.`cron_job_log` (
@@ -26,6 +46,84 @@ CREATE TABLE `hktv_ars`.`cron_job_log` (
 ENGINE = InnoDB
     DEFAULT CHARACTER SET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `hktv_ars`.`sso_user`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sso_user`
+(
+    `id`                 BIGINT NOT NULL AUTO_INCREMENT,
+    `user_uuid`          VARCHAR(36) NOT NULL,
+    `user_name`          varchar(45) NOT NULL,
+    `creation_date`      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_modified_date` DATETIME    NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `sso_user_user_name_idx_UNIQUE` (`user_name` ASC) VISIBLE,
+    UNIQUE INDEX `sso_user_user_uuid_idx_UNIQUE` (`user_uuid` ASC) VISIBLE
+)
+    ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `hktv_ars`.`auth_security_role`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `auth_security_role` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
+  `creation_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_modified_date` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `auth_security_role_name_idx_UNIQUE` (`name` ASC) VISIBLE)
+ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `hktv_ars`.`auth_security_api`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `auth_security_api` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `url` VARCHAR(100),
+    `creation_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_modified_date` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `auth_security_api_url_idx_UNIQUE` (`url` ASC) VISIBLE)
+ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `hktv_ars`.`auth_security_api_role`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `auth_security_api_role` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `auth_security_api_id` BIGINT NOT NULL,
+    `auth_security_role_id` BIGINT NOT NULL,
+    `method_type` VARCHAR(10) NOT NULL,
+    `creation_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_modified_date` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `fk_auth_security_api_role_auth_security_api_idx` (`auth_security_api_id` ASC) VISIBLE,
+    INDEX `fk_auth_security_api_role_auth_security_role1_idx` (`auth_security_role_id` ASC) VISIBLE,
+    CONSTRAINT `fk_auth_security_api_role_auth_security_api`
+    FOREIGN KEY (`auth_security_api_id`)
+    REFERENCES `auth_security_api` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_auth_security_api_role_auth_security_role1`
+    FOREIGN KEY (`auth_security_role_id`)
+    REFERENCES `auth_security_role` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
 
 -- -----------------------------------------------------
 -- Table `hktv_ars`.`delivery_zone`

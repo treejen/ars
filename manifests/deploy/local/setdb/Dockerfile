@@ -10,7 +10,7 @@ COPY /manifests/deploy/local/setdb/my.cnf /etc/mysql/conf.d/
 
 COPY /src/db/initialize.sql /docker-entrypoint-initdb.d/
 COPY /src/db/initialize_qrtz.sql /docker-entrypoint-initdb.d/
-# COPY /src/db/initialize_data.sql /docker-entrypoint-initdb.d/
+COPY /src/db/initialize_data.sql /docker-entrypoint-initdb.d/
 # COPY /src/db/local/test_data.sql /docker-entrypoint-initdb.d/
 
 # Need to change the datadir to something else that /var/lib/mysql because the parent docker file defines it as a volume.
