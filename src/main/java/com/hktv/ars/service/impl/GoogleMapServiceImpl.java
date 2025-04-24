@@ -41,14 +41,17 @@ public class GoogleMapServiceImpl implements AddressExtractionService {
         try {
             GeocodingResult[] results = GeocodingApi.geocode(geoApiContext, address).await();
             if (results.length > 0) {
-                latitude = results[0].geometry.location.lat;
-                longitude = results[0].geometry.location.lng;
                 AddressComponent[] components = results[0].addressComponents;
-                street = getComponentValue(components, AddressComponentType.ROUTE.toString()).orElse(null); //皇后大道中
-                number = normalizeStreetNumber(getComponentValue(components, AddressComponentType.STREET_NUMBER.toString()).orElse(null)); //99
-                estate = getComponentValue(components, AddressComponentType.PREMISE.toString()).orElse(null); //中環中心
-                district = getComponentValue(components, AddressComponentType.NEIGHBORHOOD.toString()).orElse(null); //中環
-                deliveryZoneCode = knnService.predict(latitude, longitude);
+                String country = getComponentValue(components, AddressComponentType.COUNTRY.toString()).orElse(null); //香港
+                if (country != null && (country.contains("香港") || (country.toLowerCase().contains("hong") && country.toLowerCase().contains("kong")))) {
+                    street = getComponentValue(components, AddressComponentType.ROUTE.toString()).orElse(null); //皇后大道中
+                    number = normalizeStreetNumber(getComponentValue(components, AddressComponentType.STREET_NUMBER.toString()).orElse(null)); //99
+                    estate = getComponentValue(components, AddressComponentType.PREMISE.toString()).orElse(null); //中環中心
+                    district = getComponentValue(components, AddressComponentType.NEIGHBORHOOD.toString()).orElse(null); //中環
+                    latitude = results[0].geometry.location.lat;
+                    longitude = results[0].geometry.location.lng;
+                    deliveryZoneCode = knnService.predict(latitude, longitude);
+                }
             }
         } catch (IOException | ApiException | InterruptedException ex) {
             log.error(ex.getMessage());
@@ -77,7 +80,7 @@ public class GoogleMapServiceImpl implements AddressExtractionService {
     }
 
     private static String normalizeStreetNumber(String streetNumber) {
-        return streetNumber == null? null : streetNumber.replaceAll("[^0-9]", ""); // 只保留數字
+        return streetNumber == null ? null : streetNumber.replaceAll("[^0-9]", ""); // 只保留數字
     }
 
 }

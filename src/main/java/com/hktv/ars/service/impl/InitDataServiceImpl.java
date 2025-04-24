@@ -50,9 +50,7 @@ public class InitDataServiceImpl implements InitDataService {
 
     @PostConstruct
     public void initData() {
-        if (!isNeedLoadExcel) {
-            return;
-        }
+
         log.info("===== start init data =====");
 
         long start = System.currentTimeMillis();
@@ -60,7 +58,8 @@ public class InitDataServiceImpl implements InitDataService {
         List<String> allCleanNameList = new ArrayList<>();
 
         for (AddressType addressType : AddressType.values()) {
-            List<AddressData> addressDataList = loadingExcelData(addressType);
+            List<AddressData> addressDataList = isNeedLoadExcel ? loadingExcelData(addressType) : readFromDB(addressType);
+
             if (addressType.isKeyWord()) {
                 allCleanNameList.addAll(
                         ahocorasickService.initMapByAddressType(addressType, addressDataList));
@@ -73,7 +72,7 @@ public class InitDataServiceImpl implements InitDataService {
         ahocorasickService.initModel(allCleanNameList);
         knnService.initModel(allAddressDataList);
 
-        log.info("===== init data cost : " + (System.currentTimeMillis() - start)/1000 + " seconds =====");
+        log.info("===== init data cost : " + (System.currentTimeMillis() - start) / 1000 + " seconds =====");
     }
 
     private List<AddressData> loadingExcelData(AddressType addressType) {
@@ -127,6 +126,23 @@ public class InitDataServiceImpl implements InitDataService {
             streetNumberDao.saveAll(streetNumberList);
             log.info("save street number size : " + streetNumberList.size());
             return streetNumberList.stream().map(StreetNumber::convertToAddressData).toList();
+        }
+        return new ArrayList<>();
+    }
+
+    private List<AddressData> readFromDB(AddressType addressType) {
+
+        if (addressType == AddressType.DISTRICT) {
+            return districtDao.findAll().stream().map(District::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.ESTATE) {
+            return estateDao.findAll().stream().map(Estate::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.STREET) {
+            return streetDao.findAll().stream().map(Street::convertToAddressData).toList();
+
+        } else if (addressType == AddressType.STREET_NUMBER) {
+            return streetNumberDao.findAll().stream().map(StreetNumber::convertToAddressData).toList();
         }
         return new ArrayList<>();
     }

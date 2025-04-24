@@ -19,7 +19,7 @@ public interface AddressRecordDao extends JpaRepository<AddressRecord, Long> {
                 ar.analysis_type as analysisType,
                 ar.original_delivery_zone_code as originalDeliveryZoneCode,
                 ar.actual_delivery_zone_code as actualDeliveryZoneCode,
-                ar.will_deliver as willDeliver,
+                ar.will_delivery as willDeliver,
                 ar.receive_time as receiveTime,
                 ar.status as status,
                 ar.latitude as latitude,
