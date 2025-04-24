@@ -41,7 +41,6 @@ public class InitDataServiceImpl implements InitDataService {
     @Value("${ars.excel-file-path}")
     private String excelFilePath;
 
-
     private final DistrictDao districtDao;
     private final EstateDao estateDao;
     private final StreetDao streetDao;

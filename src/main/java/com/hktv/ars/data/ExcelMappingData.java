@@ -16,6 +16,8 @@ public class ExcelMappingData {
 
     private String deliveryZoneCode;
 
+    private String streetNumberCode;
+
     private String isActive;
     private String willDelivery;
     private String latitude;

@@ -9,6 +9,7 @@ import com.hktv.ars.model.StreetNumber;
 import com.hktv.ars.repository.EstateDao;
 import com.hktv.ars.repository.StreetDao;
 import com.hktv.ars.repository.StreetNumberDao;
+import com.hktv.ars.service.AddressExtractionService;
 import com.hktv.ars.service.AhocorasickService;
 import com.hktv.ars.util.CleanWordUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
 @Log
 @Service
 @RequiredArgsConstructor
-public class AhocorasickServiceImpl implements AhocorasickService {
+public class AhocorasickServiceImpl implements AhocorasickService, AddressExtractionService {
 
     private static final Map<Character, Integer> CHINESE_NUMBER_MAP = Map.of(
             '零', 0, '一', 1, '二', 2, '三', 3, '四', 4,
@@ -181,12 +182,14 @@ public class AhocorasickServiceImpl implements AhocorasickService {
                 regionResponseData.setLatitude(streetNumberOptional.get().getLatitude());
                 regionResponseData.setLongitude(streetNumberOptional.get().getLongitude());
                 regionResponseData.setDeliveryZoneCode(streetNumberOptional.get().getDeliveryZoneCode());
+                regionResponseData.setWillDelivery(streetNumberOptional.get().getWillDelivery());
             } else {
                 Optional<Street> streetOptional = streetDao.findByStreetName(street);
                 if (streetOptional.isPresent()) {
                     regionResponseData.setLatitude(streetOptional.get().getLatitude());
                     regionResponseData.setLongitude(streetOptional.get().getLongitude());
                     regionResponseData.setDeliveryZoneCode(streetOptional.get().getDeliveryZoneCode());
+                    regionResponseData.setWillDelivery(streetOptional.get().getWillDelivery());
                 }
             }
         }
@@ -199,6 +202,7 @@ public class AhocorasickServiceImpl implements AhocorasickService {
                 regionResponseData.setLatitude(estateOptional.get().getLatitude());
                 regionResponseData.setLongitude(estateOptional.get().getLongitude());
                 regionResponseData.setDeliveryZoneCode(estateOptional.get().getDeliveryZoneCode());
+                regionResponseData.setWillDelivery(estateOptional.get().getWillDelivery());
             }
 
         }

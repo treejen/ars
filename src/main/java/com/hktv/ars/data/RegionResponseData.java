@@ -20,4 +20,5 @@ public class RegionResponseData {
     String deliveryZoneCode;
     BigDecimal latitude;
     BigDecimal longitude;
+    Boolean willDelivery;
 }

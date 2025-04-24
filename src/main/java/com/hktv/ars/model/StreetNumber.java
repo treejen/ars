@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 @NoArgsConstructor
 public class StreetNumber extends BaseModel {
     private String streetCode;
+    private String streetNumberCode;
     private String deliveryZoneCode;
     private Boolean willDelivery;
     private BigDecimal latitude;
@@ -32,6 +33,7 @@ public class StreetNumber extends BaseModel {
     public static StreetNumber covertExcelData(ExcelMappingData data) {
         try {
             return StreetNumber.builder()
+                    .streetNumberCode(data.getStreetNumberCode())
                     .streetCode(data.getStreetCode())
                     .deliveryZoneCode(data.getDeliveryZoneCode())
                     .willDelivery("Y".equals(data.getWillDelivery()) ? Boolean.TRUE : Boolean.FALSE)

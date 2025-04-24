@@ -7,12 +7,10 @@ import com.google.maps.model.AddressComponent;
 import com.google.maps.model.AddressComponentType;
 import com.google.maps.model.GeocodingResult;
 import com.hktv.ars.data.RegionResponseData;
-import com.hktv.ars.service.GoogleMapService;
+import com.hktv.ars.service.AddressExtractionService;
 import com.hktv.ars.service.KnnService;
-import com.hktv.ars.util.ApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,7 +21,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GoogleMapServiceImpl implements GoogleMapService {
+public class GoogleMapServiceImpl implements AddressExtractionService {
 
     private final KnnService knnService;
 

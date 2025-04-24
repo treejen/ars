@@ -2,8 +2,8 @@ package com.hktv.ars.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hktv.ars.data.RegionResponseData;
+import com.hktv.ars.service.AddressExtractionService;
 import com.hktv.ars.service.AhocorasickService;
-import com.hktv.ars.service.PythonService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
 
 @Service
 @RequiredArgsConstructor
-public class PythonServiceImpl implements PythonService {
+public class PythonServiceImpl implements AddressExtractionService {
 
     private final AhocorasickService ahocorasickService;
 

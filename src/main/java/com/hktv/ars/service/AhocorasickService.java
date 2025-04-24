@@ -12,8 +12,6 @@ public interface AhocorasickService {
 
     void initModel(List<String> keywords);
 
-    RegionResponseData extractAddresses(String address);
-
     RegionResponseData getDeliveryZoneCode(RegionResponseData regionResponseData);
 
 }
